@@ -18,6 +18,10 @@
     "license": "Apache-2.0",
     "dependencies": {
         "@architect/functions": "^5.4.0",
+        "@aws-sdk/client-dynamodb": "^3.716.0",
+        "@aws-sdk/client-dynamodb-streams": "^3.716.0",
+        "@aws-sdk/client-ssm": "^3.716.0",
+        "@aws-sdk/lib-dynamodb": "^3.716.0",
         "aws-sdk": "^2.1363.0"
     }
 }
