@@ -38,41 +38,42 @@ module.exports = {
       const waitFor = delay => new Promise(resolve => setTimeout(resolve, delay));
 
       const readStreamShardData = async (shardIterator, tblName) => {
-        let data = await dynamodb_streams.getRecords({ShardIterator: shardIterator}).promise();
-        
-        if (data.Records.length) {
-          typeof invoke.then === 'function' ? await invoke({
-            pragma: 'tables-streams',
-            name: tblName,
-            payload: data,
-          }) : invoke({
-            pragma: 'tables-streams',
-            name: tblName,
-            payload: data,
-    
-          });
-        }
-       
-        await waitFor(defaultPollingInterval);
-
-        if(data.NextShardIterator) {
-          
-          successCount++;
-          
-          if(successCount === 2) {
-            // only show polling success message after two successful returns of NextShardIterator - seems to be a delay in the stream being ready
-            console.log(`@hicksy/arc-plugin-sandbox-table-streams: Stream found for table ${tableStream.table}. Polling to invoke stream function.`)
-            retryCountRemaining = 3;
-          }
-
-          readStreamShardData(data.NextShardIterator, tblName);
-
-        } else {
-          console.log(`@hicksy/arc-plugin-sandbox-table-streams: Table ${tableStream.table} stream missing NextShardIterator. Will retry ${retryCountRemaining} more times.`)
-          retryCountRemaining--;
-          await waitFor(3000);
-        }
         try {
+          let data = await dynamodb_streams.getRecords({ShardIterator: shardIterator}).promise();
+          
+          if (data.Records.length) {
+            typeof invoke.then === 'function' ? await invoke({
+              pragma: 'tables-streams',
+              name: tblName,
+              payload: data,
+            }) : invoke({
+              pragma: 'tables-streams',
+              name: tblName,
+              payload: data,
+      
+            });
+          }
+        
+          await waitFor(defaultPollingInterval);
+
+          if(data.NextShardIterator) {
+            
+            successCount++;
+            
+            if(successCount === 2) {
+              // only show polling success message after two successful returns of NextShardIterator - seems to be a delay in the stream being ready
+              console.log(`@hicksy/arc-plugin-sandbox-table-streams: Stream found for table ${tableStream.table}. Polling to invoke stream function.`)
+              retryCountRemaining = 3;
+            }
+
+            readStreamShardData(data.NextShardIterator, tblName);
+
+          } else {
+            console.log(`@hicksy/arc-plugin-sandbox-table-streams: Table ${tableStream.table} stream missing NextShardIterator. Will retry ${retryCountRemaining} more times.`)
+            retryCountRemaining--;
+            await waitFor(3000);
+          }
+        
 
         } catch (e) {
           if (e.name == 'TrimmedDataAccessException') {
