@@ -40,8 +40,12 @@ module.exports = {
       const readStreamShardData = async (shardIterator, tblName) => {
         let data = await dynamodb_streams.getRecords({ShardIterator: shardIterator}).promise();
         
-        if(data.Records.length) {
-          invoke({
+        if (data.Records.length) {
+          typeof invoke.then === 'function' ? await invoke({
+            pragma: 'tables-streams',
+            name: tblName,
+            payload: data,
+          }) : invoke({
             pragma: 'tables-streams',
             name: tblName,
             payload: data,
@@ -67,6 +71,14 @@ module.exports = {
           console.log(`@hicksy/arc-plugin-sandbox-table-streams: Table ${tableStream.table} stream missing NextShardIterator. Will retry ${retryCountRemaining} more times.`)
           retryCountRemaining--;
           await waitFor(3000);
+        }
+        try {
+
+        } catch (e) {
+          if (e.name == 'TrimmedDataAccessException') {
+            console.log("Trimmed issue")
+            initLocalStreams(false)
+          }
         }
 
         initLocalStreams(false);
